@@ -1,11 +1,88 @@
 use anyhow::Result;
-use std::{env, fs};
+use clap::Parser;
+use std::fs;
 
-fn main() -> Result<()> {
-    let args: Vec<String> = env::args().collect();
+#[derive(Parser, Debug)]
+#[command(name = "rgrep", version, about = "A fast command-line search tool")]
+pub struct Args {
+    /// The pattern to search for
+    pub query: String,
 
-    let words = &args[1];
-    let file = &args[2];
+    /// File or directory to search in
+    pub path: String,
+
+    /// Ignore case distinctions
+    #[arg(short = 'i', long)]
+    pub ignore_case: bool,
+
+    /// Invert match: select non-matching lines
+    #[arg(short = 'v', long)]
+    pub invert_match: bool,
+
+    /// Count matching lines instead of printing them
+    #[arg(short = 'c', long)]
+    pub count: bool,
+
+    /// Search directories recursively
+    #[arg(short, long)]
+    pub recursive: bool,
+
+    /// Print line numbers
+    #[arg(short, long)]
+    pub line_number: bool,
+
+    /// Suppress normal output
+    #[arg(short = 'q', long)]
+    pub quiet: bool,
+}
+
+enum SearchMode {
+    Count,
+    Quiet,
+    Normal,
+}
+
+fn quiet_search(args: &Args) -> Result<()> {
+    print_search(args);
+
+    let words = &args.query;
+    let contents = fs::read_to_string(&args.path)?;
+
+    for (index, line) in contents.lines().enumerate() {
+        let num = line.matches(words).count();
+
+        if line.contains(words) {
+            println!("{}. {}", index + 1, num);
+        }
+    }
+
+    Ok(())
+}
+
+fn print_search(args: &Args) {
+    println!("Searching for: {}", args.query);
+}
+
+fn count_lines_search(args: &Args) -> Result<()> {
+    print_search(args);
+    let words = &args.query;
+    let file = &args.path;
+    let contents = fs::read_to_string(file)?;
+
+    for (index, line) in contents.lines().enumerate() {
+        if line.contains(words) {
+            println!("match: {}", index + 1);
+        }
+    }
+
+    Ok(())
+}
+
+fn search(args: &Args) -> Result<()> {
+    print_search(args);
+
+    let words = &args.query;
+    let file = &args.path;
 
     let contents = fs::read_to_string(file)?;
 
@@ -14,5 +91,26 @@ fn main() -> Result<()> {
             println!("{}: {}", index + 1, line);
         }
     }
+
+    Ok(())
+}
+
+fn main() -> Result<()> {
+    let args = Args::parse();
+
+    let mode = if args.count {
+        SearchMode::Count
+    } else if args.quiet {
+        SearchMode::Quiet
+    } else {
+        SearchMode::Normal
+    };
+
+    match mode {
+        SearchMode::Normal => search(&args)?,
+        SearchMode::Count => count_lines_search(&args)?,
+        SearchMode::Quiet => quiet_search(&args)?,
+    }
+
     Ok(())
 }
