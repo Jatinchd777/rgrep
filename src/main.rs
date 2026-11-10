@@ -1,5 +1,6 @@
 use anyhow::Result;
 use clap::Parser;
+use owo_colors::OwoColorize;
 use std::fs;
 
 #[derive(Parser, Debug)]
@@ -47,20 +48,27 @@ fn quiet_search(args: &Args) -> Result<()> {
 
     let words = &args.query;
     let contents = fs::read_to_string(&args.path)?;
+    let mut num = 0;
 
     for (index, line) in contents.lines().enumerate() {
-        let num = line.matches(words).count();
+        let num_temp = line.matches(words).count();
 
         if line.contains(words) {
-            println!("{}. {}", index + 1, num);
+            num += num_temp;
         }
     }
+
+    println!("{}", num);
 
     Ok(())
 }
 
+fn colorize(line: &str, words: &str) -> String {
+    line.replace(words, &format!("{}", words.truecolor(120, 220, 150).bold()))
+}
+
 fn print_search(args: &Args) {
-    println!("Searching for: {}", args.query);
+    println!("\nfile : {}\n", args.path);
 }
 
 fn count_lines_search(args: &Args) -> Result<()> {
@@ -88,7 +96,7 @@ fn search(args: &Args) -> Result<()> {
 
     for (index, line) in contents.lines().enumerate() {
         if line.contains(words) {
-            println!("{}: {}", index + 1, line);
+            println!("{}: {}", index + 1, colorize(line, words));
         }
     }
 
