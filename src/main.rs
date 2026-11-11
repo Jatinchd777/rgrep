@@ -145,9 +145,9 @@ fn main() -> Result<()> {
         }
 
         match mode {
-            SearchMode::Normal => search_file(file, &contents, &args)?,
-            SearchMode::Count => count_lines_search(file, &contents, &args)?,
-            SearchMode::Quiet => quiet_search(file, &contents, &args)?,
+            SearchMode::Normal => search_file(file, contents, &args)?,
+            SearchMode::Count => count_lines_search(file, contents, &args)?,
+            SearchMode::Quiet => quiet_search(file, contents, &args)?,
         };
     }
 
