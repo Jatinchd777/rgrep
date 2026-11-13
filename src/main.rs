@@ -29,10 +29,6 @@ pub struct Args {
     #[arg(short = 'r', long)]
     pub recursive: bool,
 
-    /// Print line numbers
-    #[arg(short, long)]
-    pub line_number: bool,
-
     /// Suppress normal output
     #[arg(short = 'q', long)]
     pub quiet: bool,
